@@ -1,0 +1,16 @@
+{
+  "name": "pf_backend-1",
+  "version": "1.0.0",
+  "description": "Coderhouse - Proyecto Final - Backend I",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Mauro Polenta",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
