@@ -1,5 +1,6 @@
 import express from "express";
 import validateJSON from "./middleware/validateJSON.js";
+import cartsRouter from "./routes/carts.router.js";
 import productsRouter from "./routes/products.router.js";
 
 const app = express();
@@ -9,6 +10,7 @@ app.use(validateJSON); // To validate the JSON format in the request body
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/products", productsRouter);
+app.use("/api/carts", cartsRouter);
 
 app.use("/", (err, req, res, next) => {
   console.error(err.stack);

@@ -3,8 +3,7 @@
  *
  * @returns {string} - A random ID
  */
-function generateID() {
-  const length = 12;
+function generateID(length = 12) {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let id = "";
