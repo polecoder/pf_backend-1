@@ -1,3 +1,5 @@
+import { getProducts } from "../utils/products.js";
+
 /**
  * Middleware to validate the product information for product CREATION.
  *
@@ -15,7 +17,7 @@
  * @param {NextFunction} next The next middleware function.
  * @returns {void}
  */
-export function validateProductCreation(req, res, next) {
+export async function validateProductCreation(req, res, next) {
   const newProduct = req.body;
 
   if (Object.keys(newProduct).length === 0) {
@@ -48,6 +50,14 @@ export function validateProductCreation(req, res, next) {
 
   if (!newProduct.category || typeof newProduct.category !== "string") {
     return res.status(400).send({ error: "Invalid product category" });
+  }
+
+  const products = await getProducts();
+  const productExists = products.find(
+    (product) => product.code === newProduct.code
+  );
+  if (productExists) {
+    return res.status(400).send({ error: "Product already exists" });
   }
 
   next();

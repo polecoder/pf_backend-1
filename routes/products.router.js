@@ -1,15 +1,10 @@
 import { Router } from "express";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import {
   validateProductCreation,
   validateProductModification,
 } from "../middleware/validateProduct.js";
 import generateID from "../utils/generateID.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { getProducts, saveProducts } from "../utils/products.js";
 
 const productsRouter = Router();
 
@@ -26,9 +21,7 @@ productsRouter.get("/", async (req, res) => {
   let offset = req.query.offset || 0;
   let limit = req.query.limit || 20;
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  const products = await getProducts();
 
   if (isNaN(offset) || offset < 0 || offset >= products.length) {
     return res.status(400).send({ error: "Invalid offset query" });
@@ -71,9 +64,7 @@ productsRouter.get("/", async (req, res) => {
 productsRouter.get("/:pid", async (req, res) => {
   let id = req.params.pid;
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  const products = await getProducts();
 
   const desiredProduct = products.find((product) => product.id === id);
 
@@ -93,9 +84,7 @@ productsRouter.get("/:pid", async (req, res) => {
 productsRouter.post("/", validateProductCreation, async (req, res) => {
   const { title, description, code, price, status, stock, category } = req.body;
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  let products = await getProducts();
 
   const id = generateID();
   const newProduct = {
@@ -110,7 +99,7 @@ productsRouter.post("/", validateProductCreation, async (req, res) => {
   };
   products.push(newProduct);
 
-  await fs.promises.writeFile(productsPath, JSON.stringify(products, null, 2));
+  await saveProducts(products);
 
   res.send({
     message: "Product added to list successfully",
@@ -131,9 +120,7 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   const { title, description, code, price, status, stock, category } = req.body;
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  const products = await getProducts();
 
   const productIndex = products.findIndex((product) => product.id === id);
   if (productIndex === -1) {
@@ -163,7 +150,7 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   products[productIndex] = updatedProduct;
 
-  await fs.promises.writeFile(productsPath, JSON.stringify(products, null, 2));
+  await saveProducts(products);
 
   res.send({
     message: "Product updated successfully",
@@ -180,9 +167,7 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 productsRouter.delete("/:pid", async (req, res) => {
   const id = req.params.pid;
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  const products = await getProducts();
 
   const productIndex = products.findIndex((product) => product.id === id);
   if (productIndex === -1) {
@@ -191,7 +176,7 @@ productsRouter.delete("/:pid", async (req, res) => {
 
   products.splice(productIndex, 1);
 
-  await fs.promises.writeFile(productsPath, JSON.stringify(products, null, 2));
+  await saveProducts(products);
 
   res.send({ message: "Product deleted successfully" });
 });

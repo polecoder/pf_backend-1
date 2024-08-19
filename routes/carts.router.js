@@ -1,11 +1,7 @@
 import { Router } from "express";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { getCarts, saveCarts } from "../utils/carts.js";
 import generateID from "../utils/generateID.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { getProducts } from "../utils/products.js";
 
 const cartsRouter = Router();
 
@@ -14,18 +10,16 @@ const cartsRouter = Router();
  * Creates a new empty cart and returns its ID.
  */
 cartsRouter.post("/", async (req, res) => {
-  const cartsPath = path.join(__dirname, "../data/carts.json");
-  let carts = await fs.promises.readFile(cartsPath, "utf-8");
-  carts = JSON.parse(carts);
-
   const newCart = {
     id: generateID(16),
     products: [],
   };
 
+  const carts = await getCarts();
+
   carts.push(newCart);
 
-  await fs.promises.writeFile(cartsPath, JSON.stringify(carts, null, 2));
+  await saveCarts(carts);
 
   res.send({ message: `Cart created with id: ${newCart.id}` });
 });
@@ -38,9 +32,7 @@ cartsRouter.post("/", async (req, res) => {
 cartsRouter.get("/:cid", async (req, res) => {
   const id = req.params.cid;
 
-  const cartsPath = path.join(__dirname, "../data/carts.json");
-  let carts = await fs.promises.readFile(cartsPath, "utf-8");
-  carts = JSON.parse(carts);
+  const carts = await getCarts();
 
   const desiredCart = carts.find((cart) => cart.id === id);
   if (!desiredCart) {
@@ -60,18 +52,14 @@ cartsRouter.get("/:cid", async (req, res) => {
 cartsRouter.post("/:cid/products/:pid", async (req, res) => {
   const { cid, pid } = req.params;
 
-  const cartsPath = path.join(__dirname, "../data/carts.json");
-  let carts = await fs.promises.readFile(cartsPath, "utf-8");
-  carts = JSON.parse(carts);
+  const carts = await getCarts();
 
   const desiredCart = carts.find((cart) => cart.id === cid);
   if (!desiredCart) {
     return res.status(404).send({ error: "Cart not found" });
   }
 
-  const productsPath = path.join(__dirname, "../data/products.json");
-  let products = await fs.promises.readFile(productsPath, "utf-8");
-  products = JSON.parse(products);
+  const products = await getProducts();
 
   const desiredProduct = products.find((product) => product.id === pid);
   if (!desiredProduct) {
@@ -87,7 +75,7 @@ cartsRouter.post("/:cid/products/:pid", async (req, res) => {
     desiredCart.products.push({ product: pid, quantity: 1 });
   }
 
-  await fs.promises.writeFile(cartsPath, JSON.stringify(carts, null, 2));
+  await saveCarts(carts);
 
   res.send({
     message: `Product with id ${pid} added to cart with id ${cid} successfully`,
