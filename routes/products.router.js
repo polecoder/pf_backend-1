@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { io } from "../index.js";
 import {
   validateProductCreation,
   validateProductModification,
@@ -101,6 +102,8 @@ productsRouter.post("/", validateProductCreation, async (req, res) => {
 
   await saveProducts(products);
 
+  io.emit("productsChange", products);
+
   res.send({
     message: "Product added to list successfully",
     product: newProduct,
@@ -152,6 +155,8 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   await saveProducts(products);
 
+  io.emit("productsChange", products);
+
   res.send({
     message: "Product updated successfully",
     product: updatedProduct,
@@ -177,6 +182,8 @@ productsRouter.delete("/:pid", async (req, res) => {
   products.splice(productIndex, 1);
 
   await saveProducts(products);
+
+  io.emit("productsChange", products);
 
   res.send({ message: "Product deleted successfully" });
 });
