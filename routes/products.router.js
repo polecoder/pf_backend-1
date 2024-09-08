@@ -74,9 +74,17 @@ productsRouter.get("/", async (req, res) => {
 productsRouter.get("/:pid", async (req, res) => {
   let id = req.params.pid;
 
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
   const desiredProduct = await getProductById(id);
 
-  res.send(desiredProduct);
+  if (!desiredProduct) {
+    return res.status(404).send({ error: "Product not found" });
+  }
+
+  res.send({ message: "Product found successfully", product: desiredProduct });
 });
 
 /**

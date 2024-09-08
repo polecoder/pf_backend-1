@@ -1,20 +1,4 @@
-import { connect } from "mongoose";
 import { productsModel } from "../models/products.model.js";
-import __dirname from "./__dirname.js";
-
-const MONGO_URI =
-  "mongodb+srv://maurop4502:MP.M0ng04tl4s_2024!@cluster0.wt9qz.mongodb.net/pf_backend?retryWrites=true&w=majority&appName=Cluster0";
-
-/**
- * Connects to the MongoDB database.
- */
-async function connectToDB() {
-  try {
-    await connect(MONGO_URI);
-  } catch (err) {
-    console.error("Error connecting to MongoDB");
-  }
-}
 
 /**
  * Returns the array of all the products from the database.
@@ -23,7 +7,6 @@ async function connectToDB() {
  */
 export async function getProducts() {
   try {
-    connectToDB();
     const products = await productsModel.find();
     return products;
   } catch (err) {
@@ -41,7 +24,6 @@ export async function getProducts() {
  */
 export async function addProduct(product) {
   try {
-    connectToDB();
     const newProduct = new productsModel(product);
     const savedProduct = await newProduct.save();
     return savedProduct._id;
@@ -52,7 +34,7 @@ export async function addProduct(product) {
 
 /**
  * Returns the product with the given id from the database.
- * If  the product does not exist, returns null.
+ * If the product does not exist, returns null.
  *
  * @param {import("mongoose").ObjectId} id - The id of the product to search for
  *
@@ -60,7 +42,6 @@ export async function addProduct(product) {
  */
 export async function getProductById(id) {
   try {
-    connectToDB();
     const product = await productsModel.findById(id);
     return product;
   } catch (err) {
@@ -80,7 +61,6 @@ export async function getProductById(id) {
  */
 export async function updateProduct(id, newData) {
   try {
-    connectToDB();
     await productsModel.findByIdAndUpdate(id, newData);
   } catch (err) {
     console.error(`Error updating product with id: ${id}`);
@@ -98,7 +78,6 @@ export async function updateProduct(id, newData) {
  */
 export async function deleteProduct(id) {
   try {
-    connectToDB();
     await productsModel.findByIdAndDelete(id);
   } catch (err) {
     console.error(`Error deleting product with id: ${id}`);

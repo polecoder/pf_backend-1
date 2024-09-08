@@ -1,7 +1,13 @@
 import { Router } from "express";
-import { getCarts, saveCarts } from "../utils/carts.js";
-import generateID from "../utils/generateID.js";
-import { getProducts } from "../utils/products.js";
+import { isValidObjectId } from "mongoose";
+import {
+  addProductToCart,
+  createCart,
+  getCartById,
+  getCarts,
+  productInCart,
+} from "../utils/carts.js";
+import { getProductById, getProducts } from "../utils/products.js";
 
 const cartsRouter = Router();
 
@@ -10,36 +16,28 @@ const cartsRouter = Router();
  * Creates a new empty cart and returns its ID.
  */
 cartsRouter.post("/", async (req, res) => {
-  const newCart = {
-    id: generateID(16),
-    products: [],
-  };
-
-  const carts = await getCarts();
-
-  carts.push(newCart);
-
-  await saveCarts(carts);
-
-  res.send({ message: `Cart created with id: ${newCart.id}` });
+  const newCartId = await createCart();
+  res.send({ message: `Cart created with id: ${newCartId}` });
 });
 
 /**
- * GET /api/carts/:id
+ * GET /api/carts/:cid
  * Returns the products in the cart with the given id.
  * If the given id does not exist, returns a 404 status code.
  */
 cartsRouter.get("/:cid", async (req, res) => {
-  const id = req.params.cid;
+  const cid = req.params.cid;
 
-  const carts = await getCarts();
+  if (!isValidObjectId(cid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
 
-  const desiredCart = carts.find((cart) => cart.id === id);
-  if (!desiredCart) {
+  const cart = await getCartById(cid);
+  if (!cart) {
     return res.status(404).send({ error: "Cart not found" });
   }
 
-  res.send(desiredCart.products);
+  res.send({ message: "Cart found successfully", cart });
 });
 
 /**
@@ -52,30 +50,25 @@ cartsRouter.get("/:cid", async (req, res) => {
 cartsRouter.post("/:cid/products/:pid", async (req, res) => {
   const { cid, pid } = req.params;
 
-  const carts = await getCarts();
+  if (!isValidObjectId(cid) || !isValidObjectId(pid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
 
-  const desiredCart = carts.find((cart) => cart.id === cid);
+  const desiredCart = await getCartById(cid);
   if (!desiredCart) {
     return res.status(404).send({ error: "Cart not found" });
   }
 
-  const products = await getProducts();
-
-  const desiredProduct = products.find((product) => product.id === pid);
+  const desiredProduct = await getProductById(pid);
   if (!desiredProduct) {
     return res.status(404).send({ error: "Product not found" });
   }
 
-  const productInCart = desiredCart.products.find(
-    (product) => product.product === pid
-  );
-  if (productInCart) {
-    productInCart.quantity++;
-  } else {
-    desiredCart.products.push({ product: pid, quantity: 1 });
-  }
+  const updatedCart = await addProductToCart(cid, pid, 1);
 
-  await saveCarts(carts);
+  if (!updatedCart) {
+    return res.status(500).send({ error: "Error adding product to cart" });
+  }
 
   res.send({
     message: `Product with id ${pid} added to cart with id ${cid} successfully`,

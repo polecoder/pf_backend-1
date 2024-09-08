@@ -24,7 +24,6 @@ document.getElementById("productList").addEventListener("click", (event) => {
     }).then((response) => {
       if (response.ok) {
         event.target.closest("li").remove();
-        console.log("Product deleted successfully");
       } else {
         console.error("Failed to delete product");
       }

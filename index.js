@@ -5,6 +5,7 @@ import validateJSON from "./middleware/JSON.middleware.js";
 import cartsRouter from "./routes/carts.router.js";
 import productsRouter from "./routes/products.router.js";
 import viewsRouter from "./routes/views.router.js";
+import connectToDB from "./utils/connectToDB.js";
 
 const app = express();
 const port = process.env.port || 8080;
@@ -22,6 +23,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(validateJSON); // To validate the JSON format in the request body
 app.use(express.static("public"));
+
+// database connection
+await connectToDB();
 
 // routes
 app.use("/api/products", productsRouter);
