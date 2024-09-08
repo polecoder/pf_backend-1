@@ -30,7 +30,12 @@
   </form>
   <ul id="productList">
     {{#each products}}
-      <li><b>{{this.title}}</b> - UYU$ {{this.price}}</li>
+      <li>
+        <p><b>{{this.title}}</b> - UYU$ {{this.price}}</p>
+        <button class="deleteButton" data-product-id="{{this._id}}">Eliminar
+          producto
+        </button>
+      </li>
     {{/each}}
   </ul>
 </div>

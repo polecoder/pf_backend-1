@@ -1,6 +1,4 @@
-import fs from "fs";
 import { connect } from "mongoose";
-import path from "path";
 import { productsModel } from "../models/products.model.js";
 import __dirname from "./__dirname.js";
 
@@ -13,7 +11,6 @@ const MONGO_URI =
 async function connectToDB() {
   try {
     await connect(MONGO_URI);
-    console.log("Connected to MongoDB. Welcome!");
   } catch (err) {
     console.error("Error connecting to MongoDB");
   }
