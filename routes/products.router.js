@@ -1,11 +1,17 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { io } from "../index.js";
 import {
   validateProductCreation,
   validateProductModification,
 } from "../middleware/products.middleware.js";
-import generateID from "../utils/generateID.js";
-import { getProducts, saveProducts } from "../utils/products.js";
+import {
+  addProduct,
+  deleteProduct,
+  getProductById,
+  getProducts,
+  updateProduct,
+} from "../utils/products.js";
 
 const productsRouter = Router();
 
@@ -24,12 +30,15 @@ productsRouter.get("/", async (req, res) => {
 
   const products = await getProducts();
 
-  if (isNaN(offset) || offset < 0 || offset >= products.length) {
-    return res.status(400).send({ error: "Invalid offset query" });
-  }
+  // Check if the query params are valid, only if the products array is not empty
+  if (products.length > 0) {
+    if (isNaN(offset) || offset < 0 || offset >= products.length) {
+      return res.status(400).send({ error: "Invalid offset query" });
+    }
 
-  if (isNaN(limit) || limit < 1 || limit > 20) {
-    return res.status(400).send({ error: "Invalid limit query" });
+    if (isNaN(limit) || limit < 1 || limit > 20) {
+      return res.status(400).send({ error: "Invalid limit query" });
+    }
   }
 
   offset = parseInt(offset);
@@ -65,13 +74,7 @@ productsRouter.get("/", async (req, res) => {
 productsRouter.get("/:pid", async (req, res) => {
   let id = req.params.pid;
 
-  const products = await getProducts();
-
-  const desiredProduct = products.find((product) => product.id === id);
-
-  if (!desiredProduct) {
-    return res.status(404).send({ error: "Product not found" });
-  }
+  const desiredProduct = await getProductById(id);
 
   res.send(desiredProduct);
 });
@@ -83,30 +86,14 @@ productsRouter.get("/:pid", async (req, res) => {
  * The data is checked with the validateProductCreation middleware.
  */
 productsRouter.post("/", validateProductCreation, async (req, res) => {
-  const { title, description, code, price, status, stock, category } = req.body;
+  const productId = await addProduct(req.body);
 
-  let products = await getProducts();
-
-  const id = generateID();
-  const newProduct = {
-    id,
-    title,
-    description,
-    code,
-    price,
-    status,
-    stock,
-    category,
-  };
-  products.push(newProduct);
-
-  await saveProducts(products);
-
+  const products = await getProducts();
   io.emit("productsChange", products);
 
   res.send({
     message: "Product added to list successfully",
-    product: newProduct,
+    id: productId,
   });
 });
 
@@ -120,28 +107,28 @@ productsRouter.post("/", validateProductCreation, async (req, res) => {
  */
 productsRouter.put("/:pid", validateProductModification, async (req, res) => {
   const id = req.params.pid;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
 
   const { title, description, code, price, status, stock, category } = req.body;
 
-  const products = await getProducts();
+  const productToUpdate = await getProductById(id);
 
-  const productIndex = products.findIndex((product) => product.id === id);
-  if (productIndex === -1) {
+  if (!productToUpdate) {
     return res.status(404).send({ error: "Product not found" });
   }
 
-  // If the request body does not contain a field, the product field is not updated
-  const updatedId = products[productIndex].id;
-  const updatedTitle = title || products[productIndex].title;
-  const updatedDescription = description || products[productIndex].description;
-  const updatedCode = code || products[productIndex].code;
-  const updatedPrice = price || products[productIndex].price;
-  const updatedStatus = status || products[productIndex].status;
-  const updatedStock = stock || products[productIndex].stock;
-  const updatedCategory = category || products[productIndex].category;
+  // If the request body does not contain a field, the product field remains the same
+  const updatedTitle = title || productToUpdate.title;
+  const updatedDescription = description || productToUpdate.description;
+  const updatedCode = code || productToUpdate.code;
+  const updatedPrice = price || productToUpdate.price;
+  const updatedStatus = status || productToUpdate.status;
+  const updatedStock = stock || productToUpdate.stock;
+  const updatedCategory = category || productToUpdate.category;
 
   const updatedProduct = {
-    id: updatedId,
     title: updatedTitle,
     description: updatedDescription,
     code: updatedCode,
@@ -151,15 +138,14 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
     category: updatedCategory,
   };
 
-  products[productIndex] = updatedProduct;
+  await updateProduct(id, updatedProduct);
 
-  await saveProducts(products);
+  const products = await getProducts();
 
   io.emit("productsChange", products);
 
   res.send({
     message: "Product updated successfully",
-    product: updatedProduct,
   });
 });
 
@@ -171,17 +157,18 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
  */
 productsRouter.delete("/:pid", async (req, res) => {
   const id = req.params.pid;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
 
-  const products = await getProducts();
-
-  const productIndex = products.findIndex((product) => product.id === id);
-  if (productIndex === -1) {
+  const productToDelete = await getProductById(id);
+  if (!productToDelete) {
     return res.status(404).send({ error: "Product not found" });
   }
 
-  products.splice(productIndex, 1);
+  await deleteProduct(id);
 
-  await saveProducts(products);
+  const products = await getProducts();
 
   io.emit("productsChange", products);
 
