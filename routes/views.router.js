@@ -1,36 +1,38 @@
 import { Router } from "express";
-import { validateProductCreation } from "../middleware/validateProduct.js";
+import {
+  prepareProductCreation,
+  validateProductCreation,
+} from "../middleware/products.middleware.js";
 import generateID from "../utils/generateID.js";
 import { getProducts, saveProducts } from "../utils/products.js";
-const realtimeProductsRouter = Router();
+
+const viewsRouter = Router();
+
+// This middleware will add the products to the request object to refresh the products when refreshing the page in /realtimeproducts
+viewsRouter.use(async (req, res, next) => {
+  req.products = await getProducts();
+  next();
+});
 
 /**
- * Middleware to parse the price, stock from the form to numbers. This also adds the status: true, to the new product. This is required for the product creation validation process.
- *
- * @param {Request} req The request object
- * @param {Response} res The response object
- * @param {NextFunction} next The next middleware function
+ * GET / - Returns the home view with the products.
  */
-async function prepareProductCreation(req, res, next) {
-  const { price, stock } = req.body;
-  req.body.price = parseInt(price);
-  req.body.stock = parseInt(stock);
-  req.body.status = true;
-  next();
-}
+viewsRouter.get("/", async (req, res) => {
+  res.render("home", { products: req.products });
+});
 
 /**
  * GET /realtimeproducts - Returns the realtimeproducts view with the products.
  */
-realtimeProductsRouter.get("/", async (req, res) => {
+viewsRouter.get("/realtimeproducts", async (req, res) => {
   res.render("realtimeproducts", { products: req.products });
 });
 
 /**
  * POST /realtimeproducts - Adds a new product to the products array, from the form in the realtimeproducts view.
  */
-realtimeProductsRouter.post(
-  "/",
+viewsRouter.post(
+  "/realtimeproducts",
   prepareProductCreation,
   validateProductCreation,
   async (req, res) => {
@@ -58,4 +60,4 @@ realtimeProductsRouter.post(
   }
 );
 
-export default realtimeProductsRouter;
+export default viewsRouter;

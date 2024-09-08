@@ -1,6 +1,21 @@
 import { getProducts } from "../utils/products.js";
 
 /**
+ * Middleware to parse the price, stock from the form to numbers. This also adds the status: true, to the new product. This is required for the product creation validation process.
+ *
+ * @param {Request} req The request object
+ * @param {Response} res The response object
+ * @param {NextFunction} next The next middleware function
+ */
+export async function prepareProductCreation(req, res, next) {
+  const { price, stock } = req.body;
+  req.body.price = parseInt(price);
+  req.body.stock = parseInt(stock);
+  req.body.status = true;
+  next();
+}
+
+/**
  * Middleware to validate the product information for product CREATION.
  *
  * The product information must contain the following fields:

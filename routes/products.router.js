@@ -3,7 +3,7 @@ import { io } from "../index.js";
 import {
   validateProductCreation,
   validateProductModification,
-} from "../middleware/validateProduct.js";
+} from "../middleware/products.middleware.js";
 import generateID from "../utils/generateID.js";
 import { getProducts, saveProducts } from "../utils/products.js";
 
