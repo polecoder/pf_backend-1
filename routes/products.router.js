@@ -72,8 +72,8 @@ productsRouter.get("/:pid", async (req, res) => {
 productsRouter.post("/", validateProductCreation, async (req, res) => {
   const productId = await addProduct(req.body);
 
-  const products = await getProducts();
-  io.emit("productsChange", products);
+  const result = await getProducts();
+  io.emit("productsChange", result.products);
 
   res.send({
     message: "Product added to list successfully",
@@ -124,9 +124,9 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   await updateProduct(id, updatedProduct);
 
-  const products = await getProducts();
+  const result = await getProducts();
 
-  io.emit("productsChange", products);
+  io.emit("productsChange", result.products);
 
   res.send({
     message: "Product updated successfully",
@@ -152,9 +152,9 @@ productsRouter.delete("/:pid", async (req, res) => {
 
   await deleteProduct(id);
 
-  const products = await getProducts();
+  const result = await getProducts();
 
-  io.emit("productsChange", products);
+  io.emit("productsChange", result.products);
 
   res.send({ message: "Product deleted successfully" });
 });

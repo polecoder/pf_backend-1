@@ -10,7 +10,8 @@ const viewsRouter = Router();
 
 // This middleware will add the products to the request object to refresh the products when refreshing the page in /realtimeproducts
 viewsRouter.use(async (req, res, next) => {
-  req.products = await getProducts();
+  const result = await getProducts();
+  req.products = result.products;
   next();
 });
 

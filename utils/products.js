@@ -1,8 +1,8 @@
 import { productsModel } from "../models/products.model.js";
 
 /**
- * PRE-CONDITION: The query recieved as a parameter is correctly formatted.
- * Returns the array of all the products from the database.
+ * PRE-CONDITION: The query recieved as a parameter is correctly formatted or null.
+ * Returns the array of all the products from the database and pagination data.
  *
  * @param {Object} query - The query parameters (limit, page, category, sort)
  *
@@ -10,6 +10,10 @@ import { productsModel } from "../models/products.model.js";
  */
 export async function getProducts(query) {
   try {
+    if (!query) {
+      const products = await productsModel.find();
+      return { products, pagination: null };
+    }
     // filter by category
     const filterQuery = {};
     if (query.category) {

@@ -67,14 +67,6 @@ export async function validateProductCreation(req, res, next) {
     return res.status(400).send({ error: "Invalid product category" });
   }
 
-  const products = await getProducts();
-  const productExists = products.find(
-    (product) => product.code === newProduct.code
-  );
-  if (productExists) {
-    return res.status(400).send({ error: "Product already exists" });
-  }
-
   next();
 }
 
