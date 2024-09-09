@@ -4,6 +4,7 @@ import {
   addProductToCart,
   createCart,
   getCartById,
+  productInCart,
   removeProductFromCart,
 } from "../utils/carts.js";
 import { getProductById } from "../utils/products.js";
@@ -165,6 +166,52 @@ cartsRouter.put("/:cid", async (req, res) => {
   }
 
   res.send({ message: `Cart with id ${cid} updated successfully` });
+});
+
+/**
+ * PUT /api/carts/:cid/products/:pid
+ * Updates the quantity of the product with the given pid in the cart with the given cid by the quantity specified in the request body.
+ *
+ * Example req.body:
+ * { quantity: 5 }
+ *
+ * If the cart or product does not exist, returns a 404 status code.
+ *
+ * If the product is not in the cart, returns a 404 status code.
+ */
+cartsRouter.put("/:cid/products/:pid", async (req, res) => {
+  const { cid, pid } = req.params;
+
+  if (!isValidObjectId(cid) || !isValidObjectId(pid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
+  // existence checking
+  if (!(await getCartById(cid))) {
+    return res.status(404).send({ error: "Cart not found" });
+  }
+  if (!(await getProductById(pid))) {
+    return res.status(404).send({ error: "Product not found" });
+  }
+
+  // product in cart checking
+  if (!(await productInCart(cid, pid))) {
+    return res.status(404).send({ error: "Product not in cart" });
+  }
+
+  // req.body checking
+  if (!req.body.quantity) {
+    return res.status(400).send({ error: "Quantity is missing" });
+  }
+  if (typeof req.body.quantity !== "number") {
+    return res.status(400).send({ error: "Quantity has incorrect type" });
+  }
+
+  await addProductToCart(cid, pid, req.body.quantity);
+
+  res.send({
+    message: `Added ${req.body.quantity} of product with id ${pid} to cart with id ${cid} successfully`,
+  });
 });
 
 export default cartsRouter;
