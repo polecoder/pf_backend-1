@@ -121,3 +121,20 @@ export async function removeProductFromCart(cid, pid) {
     console.error("Error removing product from cart in the database");
   }
 }
+
+/**
+ * PRE-CONDITION: The cart with the given cid exists.
+ * Empties the cart with the given cid.
+ *
+ * @param {string} cid - The id of the cart to empty
+ *
+ * @returns {Promise<Object>} - The updated cart
+ */
+export async function emptyCart(cid) {
+  try {
+    await cartsModel.updateOne({ _id: cid }, { products: [] });
+    return await getCartById(cid);
+  } catch (err) {
+    console.error("Error emptying cart in the database");
+  }
+}

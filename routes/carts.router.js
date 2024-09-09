@@ -3,6 +3,7 @@ import { isValidObjectId } from "mongoose";
 import {
   addProductToCart,
   createCart,
+  emptyCart,
   getCartById,
   productInCart,
   removeProductFromCart,
@@ -212,6 +213,27 @@ cartsRouter.put("/:cid/products/:pid", async (req, res) => {
   res.send({
     message: `Added ${req.body.quantity} of product with id ${pid} to cart with id ${cid} successfully`,
   });
+});
+
+/**
+ * DELETE /api/carts/:cid
+ * Deletes ALL the products from the cart with the given cid.
+ * If the cart does not exist, returns a 404 status code.
+ */
+cartsRouter.delete("/:cid", async (req, res) => {
+  const cid = req.params.cid;
+
+  if (!isValidObjectId(cid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
+  if (!(await getCartById(cid))) {
+    return res.status(404).send({ error: "Cart not found" });
+  }
+
+  await emptyCart(cid);
+
+  res.send({ message: `Cart with id ${cid} emptied successfully` });
 });
 
 export default cartsRouter;
