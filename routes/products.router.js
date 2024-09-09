@@ -36,7 +36,8 @@ productsRouter.get("/", async (req, res) => {
   }
 
   res.send({
-    products: result.products,
+    status: result.products.length > 0 ? "success" : "error",
+    payload: result.products,
     pagination: result.pagination,
   });
 });

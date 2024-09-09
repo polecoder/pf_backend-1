@@ -98,3 +98,26 @@ export async function addProductToCart(cid, pid, quantity) {
     console.error("Error adding product to cart in the database");
   }
 }
+
+/**
+ * PRE-CONDITION: The product with the given pid exists.
+ * PRE-CONDITION: The cart with the given cid exists.
+ * Removes the product with the given pid from the cart with the given cid.
+ *
+ * @param {string} cid - The id of the cart to remove the product from
+ * @param {string} pid - The id of the product to remove from the cart
+ *
+ * @returns {Promise<Object>} - The updated cart
+ */
+export async function removeProductFromCart(cid, pid) {
+  try {
+    await cartsModel.updateOne(
+      { _id: cid },
+      { $pull: { products: { product: pid } } }
+    );
+
+    return await getCartById(cid);
+  } catch (err) {
+    console.error("Error removing product from cart in the database");
+  }
+}

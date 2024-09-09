@@ -3,7 +3,6 @@ import {
   prepareProductCreation,
   validateProductCreation,
 } from "../middleware/products.middleware.js";
-import generateID from "../utils/generateID.js";
 import { addProduct, getProducts } from "../utils/products.js";
 
 const viewsRouter = Router();

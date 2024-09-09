@@ -4,10 +4,9 @@ import {
   addProductToCart,
   createCart,
   getCartById,
-  getCarts,
-  productInCart,
+  removeProductFromCart,
 } from "../utils/carts.js";
-import { getProductById, getProducts } from "../utils/products.js";
+import { getProductById } from "../utils/products.js";
 
 const cartsRouter = Router();
 
@@ -44,8 +43,8 @@ cartsRouter.get("/:cid", async (req, res) => {
  * POST /api/carts/:cid/products/:pid
  * Adds the product with the given pid to the cart with the given cid.
  * If the cart or product does not exist, returns a 404 status code.
- * If the product is already in the cart, increments its quantity by 1.
- * If the product is not in the cart, adds it with a quantity of 1.
+ * If the product is already in the cart, increments its quantity by desired amount.
+ * If the product is not in the cart, adds it with the desired quantity.
  */
 cartsRouter.post("/:cid/products/:pid", async (req, res) => {
   const { cid, pid } = req.params;
@@ -72,6 +71,37 @@ cartsRouter.post("/:cid/products/:pid", async (req, res) => {
 
   res.send({
     message: `Product with id ${pid} added to cart with id ${cid} successfully`,
+  });
+});
+
+/**
+ * DELETE /api/carts/:cid/products/:pid
+ * Removes the product with the given pid from the cart with the given cid.
+ * If the cart or product does not exist, returns a 404 status code.
+ */
+cartsRouter.delete("/:cid/products/:pid", async (req, res) => {
+  const { cid, pid } = req.params;
+
+  if (!isValidObjectId(cid) || !isValidObjectId(pid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
+  if (!(await getCartById(cid))) {
+    return res.status(404).send({ error: "Cart not found" });
+  }
+
+  if (!(await getProductById(pid))) {
+    return res.status(404).send({ error: "Product not found" });
+  }
+
+  const updatedCart = await removeProductFromCart(cid, pid);
+
+  if (!updatedCart) {
+    return res.status(500).send({ error: "Error removing product from cart" });
+  }
+
+  res.send({
+    message: `Product with id ${pid} removed from cart with id ${cid} successfully`,
   });
 });
 
