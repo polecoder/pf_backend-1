@@ -105,4 +105,66 @@ cartsRouter.delete("/:cid/products/:pid", async (req, res) => {
   });
 });
 
+/**
+ * PUT /api/carts/:cid
+ * Updates the cart with the given cid by adding all the products given in req.body as an array of objects.
+ *
+ * Example req.body:
+ * [
+ *   { product: "60b0e4f3b4f45b001f6f3f5d", quantity: 2 },
+ *   { product: "60b0e4f3b4f45b001f6f3f5e", quantity: 1 },
+ *   { product: "60b0e4f3b4f45b001f6f3f5f", quantity: 3 },
+ * ]
+ *
+ * If the given cid does not exist, returns a 404 status code.
+ */
+cartsRouter.put("/:cid", async (req, res) => {
+  const cid = req.params.cid;
+
+  if (!isValidObjectId(cid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
+  const desiredCart = await getCartById(cid);
+  if (!desiredCart) {
+    return res.status(404).send({ error: "Cart not found" });
+  }
+
+  // req.body Array type checking
+  if (!Array.isArray(req.body)) {
+    return res.status(400).send({ error: "Invalid request body" });
+  }
+
+  // objects inside array type checking
+  for (const product of req.body) {
+    // missing properties checking
+    if (!product.product || !product.quantity) {
+      return res
+        .status(400)
+        .send({ error: "Products are missing information" });
+    }
+
+    // product properties type checking
+    if (
+      !isValidObjectId(product.product) ||
+      typeof product.quantity !== "number"
+    ) {
+      return res
+        .status(400)
+        .send({ error: "Products properties have incorrect type" });
+    }
+
+    // product existence checking
+    if (!(await getProductById(product.product))) {
+      return res.status(404).send({ error: "Products not found" });
+    }
+  }
+
+  for (const product of req.body) {
+    await addProductToCart(cid, product.product, product.quantity);
+  }
+
+  res.send({ message: `Cart with id ${cid} updated successfully` });
+});
+
 export default cartsRouter;
