@@ -22,46 +22,22 @@ const productsRouter = Router();
  *
  * QUERY PARAMS:
  * - limit: Number of products to return.
- * - offset: Number of products to skip from the start.
+ * - page: Page number to return.
+ * - category: Filter products by category. The possible values are: "first", "second", "third" "goalkeeper"
+ * - sort: Sort products by price in ascending or descending order.
  */
 productsRouter.get("/", async (req, res) => {
-  let offset = req.query.offset || 0;
-  let limit = req.query.limit || 20;
+  const { limit, page, category, sort } = req.query;
 
-  const products = await getProducts();
+  const result = await getProducts({ limit, page, category, sort });
 
-  // Check if the query params are valid, only if the products array is not empty
-  if (products.length > 0) {
-    if (isNaN(offset) || offset < 0 || offset >= products.length) {
-      return res.status(400).send({ error: "Invalid offset query" });
-    }
-
-    if (isNaN(limit) || limit < 1 || limit > 20) {
-      return res.status(400).send({ error: "Invalid limit query" });
-    }
+  if (result.products.length === 0) {
+    return res.status(404).send({ error: "No products found" });
   }
 
-  offset = parseInt(offset);
-  limit = parseInt(limit);
-
-  const nextURL =
-    offset + limit < products.length
-      ? `http://localhost:8080/api/products?limit=${limit}&offset=${
-          offset + limit
-        }`
-      : null;
-
-  const previousURL =
-    offset - limit >= 0
-      ? `http://localhost:8080/api/products?limit=${limit}&offset=${
-          offset - limit
-        }`
-      : null;
-
   res.send({
-    next: nextURL,
-    previous: previousURL,
-    products: products.slice(offset, offset + limit),
+    products: result.products,
+    pagination: result.pagination,
   });
 });
 
