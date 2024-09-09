@@ -2,20 +2,6 @@ import { cartsModel } from "../models/carts.model.js";
 import { getProductById } from "./products.js";
 
 /**
- * Returns the array of all the carts from the data/carts.json file.
- *
- * @returns {Promise<Array>} - An array of carts
- */
-export async function getCarts() {
-  try {
-    const carts = await cartsModel.find();
-    return carts;
-  } catch (err) {
-    console.error("Error getting carts from the database");
-  }
-}
-
-/**
  * Creates a new empty cart in the database and returns its _id.
  *
  * @returns {Promise<string>} The _id of the created cart
@@ -136,5 +122,21 @@ export async function emptyCart(cid) {
     return await getCartById(cid);
   } catch (err) {
     console.error("Error emptying cart in the database");
+  }
+}
+
+/**
+ * PRE-CONDITION: The cart with the given cid exists.
+ * Populates the products in the cart with the given cid.
+ *
+ * @param {string} cid - The id of the cart to populate
+ *
+ * @returns {Promise<Object>} - The populated cart
+ */
+export async function populateCart(cid) {
+  try {
+    return await cartsModel.findById(cid).populate("products.product");
+  } catch (err) {
+    console.error("Error populating cart in the database");
   }
 }

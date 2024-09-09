@@ -5,6 +5,7 @@ import {
   createCart,
   emptyCart,
   getCartById,
+  populateCart,
   productInCart,
   removeProductFromCart,
 } from "../utils/carts.js";
@@ -33,10 +34,12 @@ cartsRouter.get("/:cid", async (req, res) => {
     return res.status(400).send({ error: "Invalid object id" });
   }
 
-  const cart = await getCartById(cid);
+  let cart = await getCartById(cid);
   if (!cart) {
     return res.status(404).send({ error: "Cart not found" });
   }
+
+  cart = await populateCart(cart);
 
   res.send({ message: "Cart found successfully", cart });
 });
