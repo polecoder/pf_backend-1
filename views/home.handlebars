@@ -10,10 +10,13 @@
       </li>
     {{/each}}
   </ul>
-  {{#if hasPrevPage}}
-    <a href="/products?page={{prevPage}}">Anterior</a>
-  {{/if}}
-  {{#if hasNextPage}}
-    <a href="/products?page={{nextPage}}">Siguiente</a>
-  {{/if}}
+  <div>
+    {{#if hasPrevPage}}
+      <a href="/products?page={{prevPage}}">Anterior</a>
+    {{/if}}
+    {{#if hasNextPage}}
+      <a href="/products?page={{nextPage}}">Siguiente</a>
+    {{/if}}
+  </div>
+  <div>Pagina {{page}} de {{totalPages}}</div>
 </div>

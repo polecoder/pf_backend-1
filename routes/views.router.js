@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { isValidObjectId } from "mongoose";
 import {
   prepareProductCreation,
   validateProductCreation,
 } from "../middleware/products.middleware.js";
+import { getCartById, populateCart } from "../utils/carts.js";
 import { addProduct, getProducts } from "../utils/products.js";
 
 const viewsRouter = Router();
@@ -34,6 +36,24 @@ viewsRouter.get("/products", async (req, res) => {
     totalPages: products.totalPages,
     page: products.page,
   });
+});
+
+/**
+ * GET /carts/:cid - Returns the cart view with the products in the cart.
+ */
+viewsRouter.get("/carts/:cid", async (req, res) => {
+  if (!isValidObjectId(req.params.cid)) {
+    return res.status(400).send({ error: "Invalid object id" });
+  }
+
+  const cart = await getCartById(req.params.cid);
+  if (!cart) {
+    return res.status(404).send({ error: "Cart not found" });
+  }
+
+  const result = await populateCart(req.params.cid);
+  const plainProducts = result.products.map((product) => product.toObject());
+  res.render("cart", { products: plainProducts, id: req.params.cid });
 });
 
 /**
