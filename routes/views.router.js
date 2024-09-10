@@ -7,27 +7,40 @@ import { addProduct, getProducts } from "../utils/products.js";
 
 const viewsRouter = Router();
 
-// middleware to add the products to the request object to refresh the products when refreshing the page in /realtimeproducts
-viewsRouter.use(async (req, res, next) => {
-  const result = await getProducts();
-  req.products = result.docs;
+/**
+ * Adds the products to the request object for the /realtimeproducts route.
+ *
+ * @param {Request} req - The request object
+ * @param {Response} res - The response object
+ * @param {import("express").NextFunction} next - The next middleware function
+ */
+async function addProductsToRequest(req, res, next) {
+  req.products = await getProducts();
   next();
-});
+}
 
 /**
  * GET /products - Returns the home view with the products.
  */
 viewsRouter.get("/products", async (req, res) => {
-  // convert the products to plain objects to avoid problems with the Handlebars template engine
-  const plainProducts = req.products.map((product) => product.toObject());
-  res.render("home", { products: plainProducts });
+  const query = { page: req.query.page, limit: 5 };
+  const products = await getProducts(query);
+  res.render("home", {
+    products: products.docs.map((product) => product.toObject()), // convert the products to plain objects to avoid hb error
+    hasPrevPage: products.hasPrevPage,
+    hasNextPage: products.hasNextPage,
+    prevPage: products.prevPage,
+    nextPage: products.nextPage,
+    totalPages: products.totalPages,
+    page: products.page,
+  });
 });
 
 /**
  * GET /realtimeproducts - Returns the realtimeproducts view with the products.
  */
-viewsRouter.get("/realtimeproducts", async (req, res) => {
-  const plainProducts = req.products.map((product) => product.toObject());
+viewsRouter.get("/realtimeproducts", addProductsToRequest, async (req, res) => {
+  const plainProducts = req.products.docs.map((product) => product.toObject());
   res.render("realtimeproducts", { products: plainProducts });
 });
 
