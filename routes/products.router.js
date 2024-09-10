@@ -31,14 +31,21 @@ productsRouter.get("/", async (req, res) => {
 
   const result = await getProducts({ limit, page, category, sort });
 
-  if (result.products.length === 0) {
+  if (result.docs.length === 0) {
     return res.status(404).send({ error: "No products found" });
   }
 
   res.send({
-    status: result.products.length > 0 ? "success" : "error",
-    payload: result.products,
-    pagination: result.pagination,
+    status: result.docs.length > 0 ? "success" : "error",
+    payload: result.docs,
+    totalPages: result.totalPages,
+    prevPage: result.prevPage,
+    nextPage: result.nextPage,
+    page: result.page,
+    hasPrevPage: result.hasPrevPage,
+    hasNextPage: result.hasNextPage,
+    prevLink: result.prevLink,
+    nextLink: result.nextLink,
   });
 });
 
@@ -74,7 +81,7 @@ productsRouter.post("/", validateProductCreation, async (req, res) => {
   const productId = await addProduct(req.body);
 
   const result = await getProducts();
-  io.emit("productsChange", result.products);
+  io.emit("productsChange", result.docs);
 
   res.send({
     message: "Product added to list successfully",
@@ -127,7 +134,7 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   const result = await getProducts();
 
-  io.emit("productsChange", result.products);
+  io.emit("productsChange", result.docs);
 
   res.send({
     message: "Product updated successfully",
@@ -155,7 +162,7 @@ productsRouter.delete("/:pid", async (req, res) => {
 
   const result = await getProducts();
 
-  io.emit("productsChange", result.products);
+  io.emit("productsChange", result.docs);
 
   res.send({ message: "Product deleted successfully" });
 });

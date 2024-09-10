@@ -7,18 +7,18 @@ import { addProduct, getProducts } from "../utils/products.js";
 
 const viewsRouter = Router();
 
-// This middleware will add the products to the request object to refresh the products when refreshing the page in /realtimeproducts
+// middleware to add the products to the request object to refresh the products when refreshing the page in /realtimeproducts
 viewsRouter.use(async (req, res, next) => {
   const result = await getProducts();
-  req.products = result.products;
+  req.products = result.docs;
   next();
 });
 
 /**
- * GET / - Returns the home view with the products.
+ * GET /products - Returns the home view with the products.
  */
-viewsRouter.get("/", async (req, res) => {
-  // We convert the products to plain objects to avoid problems with the Handlebars template engine
+viewsRouter.get("/products", async (req, res) => {
+  // convert the products to plain objects to avoid problems with the Handlebars template engine
   const plainProducts = req.products.map((product) => product.toObject());
   res.render("home", { products: plainProducts });
 });
@@ -40,7 +40,7 @@ viewsRouter.post(
   validateProductCreation,
   async (req, res) => {
     await addProduct(req.body);
-    // To redirect the users to the realtimeproducts page after adding a new product from the form
+    // redirect the users to the realtimeproducts page after adding a new product from the form
     res.redirect("/realtimeproducts");
   }
 );

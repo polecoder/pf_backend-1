@@ -10,10 +10,6 @@ import { productsModel } from "../models/products.model.js";
  */
 export async function getProducts(query) {
   try {
-    if (!query) {
-      const products = await productsModel.find();
-      return { products, pagination: null };
-    }
     // filter by category
     const filterQuery = {};
     if (query.category) {
@@ -42,51 +38,38 @@ export async function getProducts(query) {
     const page = parseInt(query.page) || 1;
     const limit = parseInt(query.limit) || 10;
 
-    const products = await productsModel
-      .find(filterQuery)
-      .sort(sortQuery)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    // pagination elements
-    const totalProducts = await productsModel.countDocuments(filterQuery);
-    const totalPages = Math.ceil(totalProducts / limit);
-    const prevPage = page > 1 ? page - 1 : null;
-    const nextPage = page < totalPages ? page + 1 : null;
+    const products = await productsModel.paginate(filterQuery, {
+      limit: limit,
+      page: page,
+      sort: sortQuery,
+    });
 
     // previous url construction
     const prevQueryParams = [];
-    if (query.limit) prevQueryParams.push(`limit=${limit}`);
-    if (prevPage) prevQueryParams.push(`page=${prevPage}`);
+    if (query.limit) prevQueryParams.push(`limit=${limit}`); // use query.limit because if the user doesn't specify a limit, the default value is 10, so it's not necessary to add it to the next link
+    if (products.hasPrevPage) prevQueryParams.push(`page=${products.prevPage}`);
     if (query.category) prevQueryParams.push(`category=${query.category}`);
     if (query.sort) prevQueryParams.push(`sort=${query.sort}`);
 
-    const prevLink = prevPage
+    const prevLink = products.hasPrevPage
       ? `http://localhost:8080/api/products?${prevQueryParams.join("&")}`
       : null;
 
     // next url construction
     const nextQueryParams = [];
-    if (query.limit) nextQueryParams.push(`limit=${limit}`); // use query.limit because if the user doesn't specify a limit, the default value is 10, so it's not necessary to add it to the next link
-    if (nextPage) nextQueryParams.push(`page=${nextPage}`);
+    if (query.limit) nextQueryParams.push(`limit=${limit}`);
+    if (products.hasNextPage) nextQueryParams.push(`page=${products.nextPage}`);
     if (query.category) nextQueryParams.push(`category=${query.category}`);
     if (query.sort) nextQueryParams.push(`sort=${query.sort}`);
 
-    const nextLink = nextPage
+    const nextLink = products.hasNextPage
       ? `http://localhost:8080/api/products?${nextQueryParams.join("&")}`
       : null;
 
-    const pagination = {
-      totalPages,
-      prevPage,
-      nextPage,
-      page,
+    return {
+      ...products,
       prevLink,
       nextLink,
-    };
-    return {
-      products,
-      pagination,
     };
   } catch (err) {
     console.error("Error getting products from the database");
