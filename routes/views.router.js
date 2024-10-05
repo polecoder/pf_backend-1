@@ -5,7 +5,7 @@ import {
   validateProductCreation,
 } from "../middleware/products.middleware.js";
 import { getCartById, populateCart } from "../utils/carts.js";
-import { addProduct, getProducts } from "../utils/products.js";
+import { addProduct, getAllProducts, getProducts } from "../utils/products.js";
 
 const viewsRouter = Router();
 
@@ -17,7 +17,7 @@ const viewsRouter = Router();
  * @param {import("express").NextFunction} next - The next middleware function
  */
 async function addProductsToRequest(req, res, next) {
-  req.products = await getProducts();
+  req.products = await getAllProducts();
   next();
 }
 
@@ -60,7 +60,7 @@ viewsRouter.get("/carts/:cid", async (req, res) => {
  * GET /realtimeproducts - Returns the realtimeproducts view with the products.
  */
 viewsRouter.get("/realtimeproducts", addProductsToRequest, async (req, res) => {
-  const plainProducts = req.products.docs.map((product) => product.toObject());
+  const plainProducts = req.products.map((product) => product.toObject());
   res.render("realtimeproducts", { products: plainProducts });
 });
 

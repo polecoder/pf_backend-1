@@ -1,6 +1,19 @@
 import { productsModel } from "../models/products.model.js";
 
 /**
+ * Returns the array of all the products from the database.
+ * If there are no products, returns an empty array.
+ */
+export async function getAllProducts() {
+  try {
+    const products = await productsModel.find();
+    return products;
+  } catch (err) {
+    console.error("Error getting ALL products from the database");
+  }
+}
+
+/**
  * PRE-CONDITION: The query recieved as a parameter is correctly formatted or null.
  * Returns the array of all the products from the database and pagination data.
  *

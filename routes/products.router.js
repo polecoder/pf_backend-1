@@ -8,6 +8,7 @@ import {
 import {
   addProduct,
   deleteProduct,
+  getAllProducts,
   getProductById,
   getProducts,
   updateProduct,
@@ -80,7 +81,7 @@ productsRouter.get("/:pid", async (req, res) => {
 productsRouter.post("/", validateProductCreation, async (req, res) => {
   const productId = await addProduct(req.body);
 
-  const result = await getProducts();
+  const result = await getAllProducts();
   io.emit("productsChange", result.docs);
 
   res.send({
@@ -132,7 +133,7 @@ productsRouter.put("/:pid", validateProductModification, async (req, res) => {
 
   await updateProduct(id, updatedProduct);
 
-  const result = await getProducts();
+  const result = await getAllProducts();
 
   io.emit("productsChange", result.docs);
 
@@ -160,7 +161,7 @@ productsRouter.delete("/:pid", async (req, res) => {
 
   await deleteProduct(id);
 
-  const result = await getProducts();
+  const result = await getAllProducts();
 
   io.emit("productsChange", result.docs);
 
